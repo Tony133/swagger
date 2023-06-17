@@ -25,6 +25,9 @@ type Intersection<T extends Type[]> = Type<
   UnionToIntersection<ClassRefsToConstructors<T>[number]>
 >;
 
+/**
+ * @publicApi
+ */
 export function IntersectionType<T extends Type[]>(...classRefs: T) {
   abstract class IntersectionClassType {
     constructor() {

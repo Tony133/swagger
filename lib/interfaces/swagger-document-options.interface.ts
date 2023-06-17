@@ -22,7 +22,7 @@ export interface SwaggerDocumentOptions {
   /**
    * Custom operationIdFactory that will be used to generate the `operationId`
    * based on the `controllerKey` and `methodKey`
-   * @default () => controllerKey_methodKey
+   * By default is () => controllerKey_methodKey
    */
   operationIdFactory?: (controllerKey: string, methodKey: string) => string;
 }

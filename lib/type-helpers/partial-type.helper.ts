@@ -14,6 +14,9 @@ import { clonePluginMetadataFactory } from './mapped-types.utils';
 
 const modelPropertiesAccessor = new ModelPropertiesAccessor();
 
+/**
+ * @publicApi
+ */
 export function PartialType<T>(classRef: Type<T>): Type<Partial<T>> {
   const fields = modelPropertiesAccessor.getModelProperties(classRef.prototype);
 

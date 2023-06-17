@@ -28,6 +28,9 @@ const defaultParamOptions: ApiParamOptions = {
   required: true
 };
 
+/**
+ * @publicApi
+ */
 export function ApiParam(options: ApiParamOptions): MethodDecorator {
   const param: Record<string, any> = {
     name: isNil(options.name) ? defaultParamOptions.name : options.name,

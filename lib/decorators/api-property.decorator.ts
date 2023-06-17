@@ -13,6 +13,9 @@ export interface ApiPropertyOptions
 const isEnumArray = (obj: ApiPropertyOptions): boolean =>
   obj.isArray && !!obj.enum;
 
+/**
+ * @publicApi
+ */
 export function ApiProperty(
   options: ApiPropertyOptions = {}
 ): PropertyDecorator {

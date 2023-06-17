@@ -21,6 +21,9 @@ import { normalizeRelPath } from './utils/normalize-rel-path';
 import { validateGlobalPrefix } from './utils/validate-global-prefix.util';
 import { validatePath } from './utils/validate-path.util';
 
+/**
+ * @publicApi
+ */
 export class SwaggerModule {
   private static readonly metadataLoader = new MetadataLoader();
 

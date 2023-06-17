@@ -2,6 +2,9 @@ import { SwaggerUiOptions } from './swagger-ui-options.interface';
 import { SwaggerDocumentOptions } from './swagger-document-options.interface';
 import { OpenAPIObject } from './open-api-spec.interface';
 
+/**
+ * @publicApi
+ */
 export interface SwaggerCustomOptions {
   useGlobalPrefix?: boolean;
   explorer?: boolean;

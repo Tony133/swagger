@@ -25,6 +25,9 @@ export interface ApiResponseSchemaHost
 
 export type ApiResponseOptions = ApiResponseMetadata | ApiResponseSchemaHost;
 
+/**
+ * @publicApi
+ */
 export function ApiResponse(
   options: ApiResponseOptions,
   { overrideExisting } = { overrideExisting: true }
