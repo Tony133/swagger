@@ -11,6 +11,7 @@ import {
   pick
 } from 'lodash';
 import { DECORATORS } from '../constants';
+import { ApiSchemaOptions } from '../decorators';
 import { getTypeIsArrayTuple } from '../decorators/helpers';
 import { exploreGlobalApiExtraModelsMetadata } from '../explorers/api-extra-models.explorer';
 import {
@@ -51,6 +52,9 @@ export class SchemaObjectFactory {
           undefined
         ) as [Type<any>, boolean];
       }
+      if (!isBodyParameter(param) && param.enumName) {
+        return this.createEnumParam(param, schemas);
+      }
       if (this.isPrimitiveType(param.type)) {
         return param;
       }
@@ -61,42 +65,45 @@ export class SchemaObjectFactory {
         return this.createQueryOrParamSchema(param, schemas);
       }
 
-      const modelName = this.exploreModelSchema(param.type, schemas);
-      const name = param.name || modelName;
-      const schema = {
-        ...((param as BaseParameterObject).schema || {}),
-        $ref: getSchemaPath(modelName)
-      };
-      const isArray = param.isArray;
-      param = omit(param, 'isArray');
-
-      if (isArray) {
-        return {
-          ...param,
-          name,
-          schema: {
-            type: 'array',
-            items: schema
-          }
-        };
-      }
-      return {
-        ...param,
-        name,
-        schema
-      };
+      return this.getCustomType(param, schemas);
     });
     return flatten(parameterObjects);
   }
 
-  createQueryOrParamSchema(
+  getCustomType(
     param: ParamWithTypeMetadata,
     schemas: Record<string, SchemaObject>
   ) {
-    if (param.enumName) {
-      return this.createEnumParam(param, schemas);
-    }
+    const modelName = this.exploreModelSchema(param.type, schemas);
+    const name = param.name || modelName;
+    const schema = {
+      ...((param as BaseParameterObject).schema || {}),
+      $ref: getSchemaPath(modelName)
+    };
+    const isArray = param.isArray;
+    param = omit(param, 'isArray');
 
+    if (isArray) {
+      return {
+        ...param,
+        name,
+        schema: {
+          type: 'array',
+          items: schema
+        }
+      };
+    }
+    return {
+      ...param,
+      name,
+      schema
+    };
+  }
+
+  private createQueryOrParamSchema(
+    param: ParamWithTypeMetadata,
+    schemas: Record<string, SchemaObject>
+  ) {
     if (isDateCtor(param.type as Function)) {
       return {
         format: 'date-time',
@@ -104,7 +111,20 @@ export class SchemaObjectFactory {
         type: 'string'
       };
     }
+    if (this.isBigInt(param.type as Function)) {
+      return {
+        format: 'int64',
+        ...param,
+        type: 'integer'
+      };
+    }
     if (isFunction(param.type)) {
+      if (param.name) {
+        // We should not spread parameters that have a name
+        // Just generate the schema for the type instead and link it with ref if needed
+        return this.getCustomType(param, schemas);
+      }
+
       const propertiesWithType = this.extractPropertiesFromType(
         param.type,
         schemas
@@ -112,14 +132,32 @@ export class SchemaObjectFactory {
       if (!propertiesWithType) {
         return param;
       }
+
       return propertiesWithType.map(
         (property: ParameterObject & ParamWithTypeMetadata) => {
+          const keysToOmit = [
+            'isArray',
+            'enumName',
+            'enumSchema',
+            'selfRequired'
+          ];
           const parameterObject = {
-            ...(omit(property, 'enumName') as ParameterObject),
+            ...(omit(property, keysToOmit) as ParameterObject),
             in: 'query',
             required: property.required ?? true
           };
-          return parameterObject;
+
+          const keysToMoveToSchema = [
+            ...this.swaggerTypesMapper.getSchemaOptionsKeys(),
+            'allOf'
+          ];
+          return keysToMoveToSchema.reduce((acc, key) => {
+            if (key in property) {
+              acc.schema = { ...acc.schema, [key]: property[key] };
+              delete acc[key];
+            }
+            return acc;
+          }, parameterObject);
         }
       ) as ParameterObject[];
     }
@@ -141,9 +179,7 @@ export class SchemaObjectFactory {
     if (!prototype) {
       return;
     }
-    const extraModels = exploreGlobalApiExtraModelsMetadata(
-      type as Type<unknown>
-    );
+    const extraModels = exploreGlobalApiExtraModelsMetadata(type);
     extraModels.forEach((item) =>
       this.exploreModelSchema(item, schemas, pendingSchemasRefs)
     );
@@ -160,8 +196,23 @@ export class SchemaObjectFactory {
       );
 
       const schemaCombinators = ['oneOf', 'anyOf', 'allOf'];
-      if (schemaCombinators.some((key) => key in property)) {
-        delete (property as SchemaObjectMetadata).type;
+      const declaredSchemaCombinator = schemaCombinators.find(
+        (combinator) => combinator in property
+      );
+      if (declaredSchemaCombinator) {
+        const schemaObjectMetadata = property as SchemaObjectMetadata;
+
+        if (
+          schemaObjectMetadata?.type === 'array' ||
+          schemaObjectMetadata.isArray
+        ) {
+          schemaObjectMetadata.items = {};
+          schemaObjectMetadata.items[declaredSchemaCombinator] =
+            property[declaredSchemaCombinator];
+          delete property[declaredSchemaCombinator];
+        } else {
+          delete schemaObjectMetadata.type;
+        }
       }
       return property as ParameterObject;
     });
@@ -190,21 +241,52 @@ export class SchemaObjectFactory {
     if (!propertiesWithType) {
       return '';
     }
+    const extensionProperties =
+      Reflect.getMetadata(DECORATORS.API_EXTENSION, type) || {};
+
+    const { schemaName, schemaProperties } = this.getSchemaMetadata(type);
+
     const typeDefinition: SchemaObject = {
       type: 'object',
-      properties: mapValues(keyBy(propertiesWithType, 'name'), (property) =>
-        omit(property, ['name', 'isArray', 'required', 'enumName'])
-      ) as Record<string, SchemaObject | ReferenceObject>
+      properties: mapValues(keyBy(propertiesWithType, 'name'), (property) => {
+        const keysToOmit = [
+          'name',
+          'isArray',
+          'enumName',
+          'enumSchema',
+          'selfRequired'
+        ];
+
+        if ('required' in property && Array.isArray(property.required)) {
+          return omit(property, keysToOmit);
+        }
+
+        return omit(property, [...keysToOmit, 'required']);
+      }) as Record<string, SchemaObject | ReferenceObject>,
+      ...extensionProperties,
+      ...schemaProperties
     };
+
     const typeDefinitionRequiredFields = propertiesWithType
-      .filter((property) => property.required != false)
+      .filter(
+        (property) =>
+          (property.required != false && !Array.isArray(property.required)) ||
+          ('selfRequired' in property && property.selfRequired != false)
+      )
       .map((property) => property.name);
 
     if (typeDefinitionRequiredFields.length > 0) {
       typeDefinition['required'] = typeDefinitionRequiredFields;
     }
-    schemas[type.name] = typeDefinition;
-    return type.name;
+    schemas[schemaName] = typeDefinition;
+    return schemaName;
+  }
+
+  getSchemaMetadata(type: Function | Type<unknown>) {
+    const schemas: ApiSchemaOptions[] =
+      Reflect.getOwnMetadata(DECORATORS.API_SCHEMA, type) ?? [];
+    const { name, ...schemaProperties } = schemas[schemas.length - 1] ?? {};
+    return { schemaName: name ?? type.name, schemaProperties };
   }
 
   mergePropertyWithMetadata(
@@ -213,12 +295,19 @@ export class SchemaObjectFactory {
     schemas: Record<string, SchemaObject>,
     pendingSchemaRefs: string[],
     metadata?: SchemaObjectMetadata
-  ): SchemaObjectMetadata | ReferenceObject | ParameterObject {
+  ):
+    | SchemaObjectMetadata
+    | ReferenceObject
+    | ParameterObject
+    | (SchemaObject & { selfRequired?: boolean }) {
     if (!metadata) {
       metadata =
-        Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, prototype, key) ||
-        {};
+        omit(
+          Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, prototype, key),
+          'link'
+        ) || {};
     }
+
     if (this.isLazyTypeFunc(metadata.type as Function)) {
       metadata.type = (metadata.type as Function)();
       [metadata.type, metadata.isArray] = getTypeIsArrayTuple(
@@ -249,18 +338,32 @@ export class SchemaObjectFactory {
     if (!(enumName in schemas)) {
       const _enum = param.enum
         ? param.enum
-        : param.schema ?
-        (param.schema['items']
-        ? param.schema['items']['enum']
-        : param.schema['enum'])
-        : param.isArray && param.items
-        ? param.items.enum
-        : undefined;
+        : param.schema
+          ? param.schema['items']
+            ? param.schema['items']['enum']
+            : param.schema['enum']
+          : param.isArray && param.items
+            ? param.items.enum
+            : undefined;
 
       schemas[enumName] = {
-        type: param.schema?.['type'] ?? 'string',
-        enum: _enum
+        type:
+          (param.isArray
+            ? param.schema?.['items']?.['type']
+            : param.schema?.['type']) ?? 'string',
+        enum: _enum,
+        ...param.enumSchema,
+        ...(param['x-enumNames'] ? { 'x-enumNames': param['x-enumNames'] } : {})
       };
+    } else {
+      // Enum type is already defined so grab it and
+      // assign additional metadata if specified
+      if (param.enumSchema) {
+        schemas[enumName] = {
+          ...schemas[enumName],
+          ...param.enumSchema
+        };
+      }
     }
 
     param.schema =
@@ -268,31 +371,50 @@ export class SchemaObjectFactory {
         ? { type: 'array', items: { $ref } }
         : { $ref };
 
-    return omit(param, ['isArray', 'items', 'enumName', 'enum']);
+    return omit(param, [
+      'isArray',
+      'items',
+      'enumName',
+      'enum',
+      'x-enumNames',
+      'enumSchema'
+    ]);
   }
 
   createEnumSchemaType(
     key: string,
     metadata: SchemaObjectMetadata,
     schemas: Record<string, SchemaObject>
-  ) {
-    if (!metadata.enumName) {
+  ): SchemaObjectMetadata {
+    if (!('enumName' in metadata) || !metadata.enumName) {
       return {
         ...metadata,
         name: metadata.name || key
       };
     }
+
     const enumName = metadata.enumName;
     const $ref = getSchemaPath(enumName);
 
-    if (!(enumName in schemas)) {
+    const enumType: string =
+      (metadata.isArray ? metadata.items['type'] : metadata.type) ?? 'string';
+
+    if (!schemas[enumName]) {
       schemas[enumName] = {
-        type: 'string',
+        type: enumType,
+        ...metadata.enumSchema,
         enum:
           metadata.isArray && metadata.items
             ? metadata.items['enum']
             : metadata.enum
       };
+    } else {
+      if (metadata.enumSchema) {
+        schemas[enumName] = {
+          ...schemas[enumName],
+          ...metadata.enumSchema
+        };
+      }
     }
 
     const _schemaObject = {
@@ -301,15 +423,17 @@ export class SchemaObjectFactory {
       type: metadata.isArray ? 'array' : 'string'
     };
 
-    const refHost = metadata.isArray ? { items: { $ref } } : { $ref };
+    const refHost = metadata.isArray
+      ? { items: { $ref } }
+      : { allOf: [{ $ref }] };
     const paramObject = { ..._schemaObject, ...refHost };
-    const pathsToOmit = ['enum', 'enumName'];
+    const pathsToOmit = ['enum', 'enumName', 'enumSchema'];
 
     if (!metadata.isArray) {
       pathsToOmit.push('type');
     }
 
-    return omit(paramObject, pathsToOmit);
+    return omit(paramObject, pathsToOmit) as SchemaObjectMetadata;
   }
 
   createNotBuiltInTypeReference(
@@ -340,7 +464,7 @@ export class SchemaObjectFactory {
     if (metadata.isArray) {
       return this.transformToArraySchemaProperty(metadata, key, { $ref });
     }
-    const keysToRemove = ['type', 'isArray', 'required'];
+    const keysToRemove = ['type', 'isArray', 'required', 'name'];
     const validMetadataObject = omit(metadata, keysToRemove);
     const extraMetadataKeys = Object.keys(validMetadataObject);
 
@@ -399,6 +523,8 @@ export class SchemaObjectFactory {
   ) {
     const objLiteralKeys = Object.keys(literalObj);
     const properties = {};
+    const required = [];
+
     objLiteralKeys.forEach((key) => {
       const propertyCompilerMetadata = literalObj[key];
       if (isEnumArray<Record<string, any>>(propertyCompilerMetadata)) {
@@ -423,15 +549,22 @@ export class SchemaObjectFactory {
         [],
         propertyCompilerMetadata
       );
-      const keysToRemove = ['isArray', 'name'];
+
+      if ('required' in propertyMetadata && propertyMetadata.required) {
+        required.push(key);
+      }
+      const keysToRemove = ['isArray', 'name', 'required'];
       const validMetadataObject = omit(propertyMetadata, keysToRemove);
       properties[key] = validMetadataObject;
     });
-    return {
+
+    const schema = {
       name: key,
       type: 'object',
-      properties
+      properties,
+      required
     };
+    return schema;
   }
 
   createFromNestedArray(
@@ -468,21 +601,30 @@ export class SchemaObjectFactory {
     schemas: Record<string, SchemaObject>,
     pendingSchemaRefs: string[],
     nestedArrayType?: unknown
-  ) {
-    const trueType = nestedArrayType || metadata.type;
-    if (this.isObjectLiteral(trueType as Record<string, any>)) {
-      return this.createFromObjectLiteral(
+  ):
+    | SchemaObjectMetadata
+    | ReferenceObject
+    | ParameterObject
+    | (SchemaObject & { selfRequired?: boolean }) {
+    const typeRef = nestedArrayType || metadata.type;
+    if (this.isObjectLiteral(typeRef as Record<string, any>)) {
+      const schemaFromObjectLiteral = this.createFromObjectLiteral(
         key,
-        trueType as Record<string, any>,
+        typeRef as Record<string, any>,
         schemas
       );
+      return {
+        ...schemaFromObjectLiteral,
+        selfRequired: metadata.required as boolean
+      };
     }
-    if (isString(trueType)) {
+
+    if (isString(typeRef)) {
       if (isEnumMetadata(metadata)) {
         return this.createEnumSchemaType(key, metadata, schemas);
       }
       if (metadata.isArray) {
-        return this.transformToArraySchemaProperty(metadata, key, trueType);
+        return this.transformToArraySchemaProperty(metadata, key, typeRef);
       }
 
       return {
@@ -490,7 +632,7 @@ export class SchemaObjectFactory {
         name: metadata.name || key
       };
     }
-    if (isDateCtor(trueType as Function)) {
+    if (isDateCtor(typeRef as Function)) {
       if (metadata.isArray) {
         return this.transformToArraySchemaProperty(metadata, key, {
           format: metadata.format || 'date-time',
@@ -502,33 +644,60 @@ export class SchemaObjectFactory {
         ...metadata,
         type: 'string',
         name: metadata.name || key
-      };
+      } as SchemaObjectMetadata;
     }
-    if (this.isBigInt(trueType as Function)) {
+    if (this.isBigInt(typeRef as Function)) {
       return {
         format: 'int64',
         ...metadata,
         type: 'integer',
         name: metadata.name || key
-      };
+      } as SchemaObjectMetadata;
     }
-    if (!isBuiltInType(trueType as Function)) {
+    if (!isBuiltInType(typeRef as Function)) {
       return this.createNotBuiltInTypeReference(
         key,
         metadata,
-        trueType,
+        typeRef,
         schemas,
         pendingSchemaRefs
       );
     }
-    const typeName = this.getTypeName(trueType as Type<unknown>);
+    const typeName = this.getTypeName(typeRef as Type<unknown>);
     const itemType = this.swaggerTypesMapper.mapTypeToOpenAPIType(typeName);
+
     if (metadata.isArray) {
       return this.transformToArraySchemaProperty(metadata, key, {
         type: itemType
       });
     } else if (itemType === 'array') {
       const defaultOnArray = 'string';
+
+      // Check if the schema has a combinator because if so
+      // we should not auto-wrap the type in an array
+      //
+      // Example:
+      // @ApiProperty({
+      //   oneOf: [
+      //     { type: 'array', items: { type: 'string' } },
+      //     { type: 'array', items: { type: 'number' } },
+      //     { type: 'array', items: { type: 'boolean' } }
+      //   ],
+      // })
+      // attribute: string[] | number[] | boolean[];
+      //
+      // this should not produce an array of arrays
+      const hasSchemaCombinator = ['oneOf', 'anyOf', 'allOf'].some(
+        (combinator) => combinator in metadata
+      );
+      if (hasSchemaCombinator) {
+        return {
+          ...metadata,
+          type: undefined,
+          name: metadata.name || key
+        };
+      }
+
       return this.transformToArraySchemaProperty(metadata, key, {
         type: defaultOnArray
       });
@@ -537,7 +706,7 @@ export class SchemaObjectFactory {
       ...metadata,
       name: metadata.name || key,
       type: itemType
-    };
+    } as SchemaObjectMetadata;
   }
 
   private isArrayCtor(type: Type<unknown> | string): boolean {

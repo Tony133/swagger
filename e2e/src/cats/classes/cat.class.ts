@@ -1,6 +1,8 @@
-import { ApiProperty } from '../../../../lib';
+import { ApiExtension, ApiProperty } from '../../../../lib';
 import { LettersEnum } from '../dto/pagination-query.dto';
 
+@ApiExtension('x-schema-extension', { test: 'test' })
+@ApiExtension('x-schema-extension-multiple', { test: 'test' })
 export class Cat {
   @ApiProperty({ example: 'Kitty', description: 'The name of the Cat' })
   name: string;
@@ -44,6 +46,23 @@ export class Cat {
   options?: Record<string, any>[];
 
   @ApiProperty({
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+        example: 'ErrorName'
+      },
+      status: {
+        type: 'number',
+        example: 400
+      }
+    },
+    required: ['name', 'status'],
+    selfRequired: true
+  })
+  rawDefinition?: Record<string, any>;
+
+  @ApiProperty({
     enum: LettersEnum
   })
   enum: LettersEnum;
@@ -52,5 +71,27 @@ export class Cat {
     enum: LettersEnum,
     isArray: true
   })
-  enumArr: LettersEnum;
+  enumArr: LettersEnum[];
+
+  @ApiProperty({
+    enum: LettersEnum,
+    enumName: 'LettersEnum',
+    description: 'A small assortment of letters?',
+    default: 'A',
+    deprecated: true
+  })
+  enumWithRef: LettersEnum;
+
+  @ApiProperty({
+    oneOf: [
+      { type: 'array', items: { type: 'string' } },
+      { type: 'array', items: { type: 'number' } },
+      { type: 'array', items: { type: 'boolean' } }
+    ],
+    description: 'Array of values that uses "oneOf"'
+  })
+  oneOfExample?: string[] | number[] | boolean[];
+
+  @ApiProperty({ type: [String], link: () => Cat })
+  kittenIds?: string[];
 }

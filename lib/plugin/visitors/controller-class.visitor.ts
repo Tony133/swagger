@@ -9,14 +9,16 @@ import {
   getDecoratorArguments,
   getDecoratorName,
   getMainCommentOfNode,
+  getTsDocErrorsOfNode,
   getTsDocTagsOfNode
 } from '../utils/ast-utils';
 import {
+  convertPath,
   getDecoratorOrUndefinedByNames,
   getTypeReferenceAsString,
-  hasPropertyKey,
-  replaceImportPath
+  hasPropertyKey
 } from '../utils/plugin-utils';
+import { typeReferenceToIdentifier } from '../utils/type-reference-to-identifier.util';
 import { AbstractFileVisitor } from './abstract.visitor';
 
 type ClassMetadata = Record<string, ts.ObjectLiteralExpression>;
@@ -138,6 +140,14 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
       typeChecker,
       metadata
     );
+
+    const apiResponseDecoratorsArray = this.createApiResponseDecorator(
+      factory,
+      compilerNode,
+      options,
+      metadata
+    );
+
     const removeExistingApiOperationDecorator =
       apiOperationDecoratorsArray.length > 0;
 
@@ -159,6 +169,7 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     );
     const updatedDecorators = [
       ...apiOperationDecoratorsArray,
+      ...apiResponseDecoratorsArray,
       ...existingDecorators,
       factory.createDecorator(
         factory.createCallExpression(
@@ -198,36 +209,78 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     if (!options.introspectComments) {
       return [];
     }
-    const keyToGenerate = options.controllerKeyOfComment;
+
     const apiOperationDecorator = getDecoratorOrUndefinedByNames(
       [ApiOperation.name],
       decorators,
       factory
     );
-    const apiOperationExpr: ts.ObjectLiteralExpression | undefined =
-      apiOperationDecorator &&
-      head(getDecoratorArguments(apiOperationDecorator));
-    const apiOperationExprProperties =
-      apiOperationExpr &&
-      (apiOperationExpr.properties as ts.NodeArray<ts.PropertyAssignment>);
+    let apiOperationExistingProps:
+      | ts.NodeArray<ts.PropertyAssignment>
+      | undefined = undefined;
 
-    const extractedComments = getMainCommentOfNode(node, sourceFile);
+    if (apiOperationDecorator && !options.readonly) {
+      const apiOperationExpr = head(
+        getDecoratorArguments(apiOperationDecorator)
+      );
+      if (apiOperationExpr) {
+        apiOperationExistingProps =
+          apiOperationExpr.properties as ts.NodeArray<ts.PropertyAssignment>;
+      }
+    }
+
+    const extractedComments = getMainCommentOfNode(node);
     if (!extractedComments) {
       return [];
     }
-    const tags = getTsDocTagsOfNode(node, sourceFile, typeChecker);
-
     const properties = [
-      factory.createPropertyAssignment(
-        keyToGenerate,
-        factory.createStringLiteral(extractedComments)
-      ),
-      ...(apiOperationExprProperties ?? factory.createNodeArray())
+      ...(apiOperationExistingProps ?? factory.createNodeArray())
     ];
+
+    const tags = getTsDocTagsOfNode(node, typeChecker);
+    const hasRemarksKey = hasPropertyKey(
+      'description',
+      factory.createNodeArray(apiOperationExistingProps)
+    );
+    if (!hasRemarksKey && tags.remarks) {
+      // When the @remarks tag is used in the comment, it will be added to the description property of the @ApiOperation decorator.
+      // In this case, even when the "controllerKeyOfComment" option is set to "description", the "summary" property will be used.
+      const remarksPropertyAssignment = factory.createPropertyAssignment(
+        'description',
+        createLiteralFromAnyValue(factory, tags.remarks)
+      );
+      properties.push(remarksPropertyAssignment);
+
+      if (options.controllerKeyOfComment === 'description') {
+        properties.unshift(
+          factory.createPropertyAssignment(
+            'summary',
+            factory.createStringLiteral(extractedComments)
+          )
+        );
+      } else {
+        const keyToGenerate = options.controllerKeyOfComment;
+        properties.unshift(
+          factory.createPropertyAssignment(
+            keyToGenerate,
+            factory.createStringLiteral(extractedComments)
+          )
+        );
+      }
+    } else {
+      // No @remarks tag was found in the comment so use the attribute set by the user
+      const keyToGenerate = options.controllerKeyOfComment;
+      properties.unshift(
+        factory.createPropertyAssignment(
+          keyToGenerate,
+          factory.createStringLiteral(extractedComments)
+        )
+      );
+    }
 
     const hasDeprecatedKey = hasPropertyKey(
       'deprecated',
-      factory.createNodeArray(apiOperationExprProperties)
+      factory.createNodeArray(apiOperationExistingProps)
     );
     if (!hasDeprecatedKey && tags.deprecated) {
       const deprecatedPropertyAssignment = factory.createPropertyAssignment(
@@ -282,6 +335,53 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     }
   }
 
+  createApiResponseDecorator(
+    factory: ts.NodeFactory,
+    node: ts.MethodDeclaration,
+    options: PluginOptions,
+    metadata: ClassMetadata
+  ) {
+    if (!options.introspectComments) {
+      return [];
+    }
+
+    const tags = getTsDocErrorsOfNode(node);
+    if (!tags.length) {
+      return [];
+    }
+
+    return tags.map((tag) => {
+      const properties = [];
+      properties.push(
+        factory.createPropertyAssignment(
+          'status',
+          factory.createNumericLiteral(tag.status)
+        )
+      );
+      properties.push(
+        factory.createPropertyAssignment(
+          'description',
+          factory.createNumericLiteral(tag.description)
+        )
+      );
+      const objectLiteralExpr = factory.createObjectLiteralExpression(
+        compact(properties)
+      );
+      const methodKey = node.name.getText();
+      metadata[methodKey] = objectLiteralExpr;
+
+      const apiResponseDecoratorArguments: ts.NodeArray<ts.Expression> =
+        factory.createNodeArray([objectLiteralExpr]);
+      return factory.createDecorator(
+        factory.createCallExpression(
+          factory.createIdentifier(`${OPENAPI_NAMESPACE}.${ApiResponse.name}`),
+          undefined,
+          apiResponseDecoratorArguments
+        )
+      );
+    });
+  }
+
   createDecoratorObjectLiteralExpr(
     factory: ts.NodeFactory,
     node: ts.MethodDeclaration,
@@ -292,12 +392,14 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     options: PluginOptions
   ): ts.ObjectLiteralExpression {
     let properties = [];
-    if (!options.readonly) {
+
+    if (!options.readonly && !options.skipAutoHttpCode) {
       properties = properties.concat(
         existingProperties,
         this.createStatusPropertyAssignment(factory, node, existingProperties)
       );
     }
+
     properties = properties.concat([
       this.createTypePropertyAssignment(
         factory,
@@ -345,19 +447,20 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     if (!type) {
       return undefined;
     }
-    const { typeName, isArray } = getTypeReferenceAsString(type, typeChecker);
-    if (!typeName) {
+    const typeReferenceDescriptor = getTypeReferenceAsString(type, typeChecker);
+    if (!typeReferenceDescriptor.typeName) {
       return undefined;
     }
-    if (typeName.includes('node_modules')) {
+    if (typeReferenceDescriptor.typeName.includes('node_modules')) {
       return undefined;
     }
-    const identifier = this.typeReferenceStringToIdentifier(
-      typeName,
-      isArray,
+    const identifier = typeReferenceToIdentifier(
+      typeReferenceDescriptor,
       hostFilename,
       options,
-      factory
+      factory,
+      type,
+      this._typeImports
     );
     return factory.createPropertyAssignment('type', identifier);
   }
@@ -399,38 +502,11 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
   }
 
   private normalizeImportPath(pathToSource: string, path: string) {
-    let relativePath = posix.relative(pathToSource, path);
+    let relativePath = posix.relative(
+      convertPath(pathToSource),
+      convertPath(path)
+    );
     relativePath = relativePath[0] !== '.' ? './' + relativePath : relativePath;
     return relativePath;
-  }
-
-  private typeReferenceStringToIdentifier(
-    _typeReference: string,
-    isArray: boolean,
-    hostFilename: string,
-    options: PluginOptions,
-    factory: ts.NodeFactory
-  ) {
-    const { typeReference, importPath } = replaceImportPath(
-      _typeReference,
-      hostFilename,
-      options
-    );
-
-    let identifier: ts.Identifier;
-    if (options.readonly && typeReference?.includes('import')) {
-      if (!this._typeImports[importPath]) {
-        this._typeImports[importPath] = typeReference;
-      }
-
-      identifier = factory.createIdentifier(
-        isArray ? `[t["${importPath}"]]` : `t["${importPath}"]`
-      );
-    } else {
-      identifier = factory.createIdentifier(
-        isArray ? `[${typeReference}]` : typeReference
-      );
-    }
-    return identifier;
   }
 }

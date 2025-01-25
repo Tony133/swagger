@@ -8,13 +8,25 @@ import {
 } from '../interfaces/open-api-spec.interface';
 import { getTypeIsArrayTuple } from './helpers';
 
-export interface ApiResponseMetadata
+type ApiResponseExampleValue = any;
+export interface ApiResponseExamples {
+  summary: string;
+  value: ApiResponseExampleValue;
+}
+
+export interface ApiResponseCommonMetadata
   extends Omit<ResponseObject, 'description'> {
   status?: number | 'default' | '1XX' | '2XX' | '3XX' | '4XX' | '5XX';
   type?: Type<unknown> | Function | [Function] | string;
   isArray?: boolean;
   description?: string;
 }
+
+export type ApiResponseMetadata =
+  | (ApiResponseCommonMetadata & { example?: ApiResponseExampleValue })
+  | (ApiResponseCommonMetadata & {
+      examples?: { [key: string]: ApiResponseExamples };
+    });
 
 export interface ApiResponseSchemaHost
   extends Omit<ResponseObject, 'description'> {
@@ -28,17 +40,27 @@ export type ApiResponseOptions = ApiResponseMetadata | ApiResponseSchemaHost;
 /**
  * @publicApi
  */
+export type ApiResponseNoStatusOptions =
+  | (Omit<ApiResponseCommonMetadata, 'status'> & {
+      example?: ApiResponseExampleValue;
+    })
+  | (Omit<ApiResponseCommonMetadata, 'status'> & {
+      examples?: { [key: string]: ApiResponseExamples };
+    })
+  | Omit<ApiResponseSchemaHost, 'status'>;
+
 export function ApiResponse(
   options: ApiResponseOptions,
   { overrideExisting } = { overrideExisting: true }
 ): MethodDecorator & ClassDecorator {
+  const apiResponseMetadata = options as ApiResponseMetadata;
   const [type, isArray] = getTypeIsArrayTuple(
-    (options as ApiResponseMetadata).type,
-    (options as ApiResponseMetadata).isArray
+    apiResponseMetadata.type,
+    apiResponseMetadata.isArray
   );
 
-  (options as ApiResponseMetadata).type = type;
-  (options as ApiResponseMetadata).isArray = isArray;
+  apiResponseMetadata.type = type;
+  apiResponseMetadata.isArray = isArray;
   options.description = options.description ? options.description : '';
 
   const groupedMetadata = {
@@ -87,261 +109,100 @@ export function ApiResponse(
 /**
  * @publicApi
  */
-export const ApiOkResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.OK
+interface HttpStatusInfo {
+  code: number;
+  functionName: string;
+}
+
+const decorators: {
+  [key: string]: (
+    options?: ApiResponseNoStatusOptions
+  ) => MethodDecorator & ClassDecorator;
+} = {};
+
+const statusList: HttpStatusInfo[] = Object.keys(HttpStatus)
+  .filter((key) => !isNaN(Number(HttpStatus[key])))
+  .map((key) => {
+    const functionName = key
+      .split('_')
+      .map(
+        (strToken) =>
+          `${strToken[0].toUpperCase()}${strToken.slice(1).toLowerCase()}`
+      )
+      .join('');
+    return {
+      code: Number(HttpStatus[key]),
+      functionName: `Api${functionName}Response`
+    };
   });
+
+statusList.forEach(({ code, functionName }) => {
+  decorators[functionName] = function (
+    options: ApiResponseNoStatusOptions = {}
+  ) {
+    return ApiResponse({
+      ...options,
+      status: code
+    });
+  };
+});
+
+
+export const {
+  ApiContinueResponse,
+  ApiSwitchingProtocolsResponse,
+  ApiProcessingResponse,
+  ApiEarlyhintsResponse,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiAcceptedResponse,
+  ApiNonAuthoritativeInformationResponse,
+  ApiNoContentResponse,
+  ApiResetContentResponse,
+  ApiPartialContentResponse,
+  ApiAmbiguousResponse,
+  ApiMovedPermanentlyResponse,
+  ApiFoundResponse,
+  ApiSeeOtherResponse,
+  ApiNotModifiedResponse,
+  ApiTemporaryRedirectResponse,
+  ApiPermanentRedirectResponse,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+  ApiPaymentRequiredResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiMethodNotAllowedResponse,
+  ApiNotAcceptableResponse,
+  ApiProxyAuthenticationRequiredResponse,
+  ApiRequestTimeoutResponse,
+  ApiConflictResponse,
+  ApiGoneResponse,
+  ApiLengthRequiredResponse,
+  ApiPreconditionFailedResponse,
+  ApiPayloadTooLargeResponse,
+  ApiUriTooLongResponse,
+  ApiUnsupportedMediaTypeResponse,
+  ApiRequestedRangeNotSatisfiableResponse,
+  ApiExpectationFailedResponse,
+  ApiIAmATeapotResponse,
+  ApiMisdirectedResponse,
+  ApiUnprocessableEntityResponse,
+  ApiFailedDependencyResponse,
+  ApiPreconditionRequiredResponse,
+  ApiTooManyRequestsResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotImplementedResponse,
+  ApiBadGatewayResponse,
+  ApiServiceUnavailableResponse,
+  ApiGatewayTimeoutResponse,
+  ApiHttpVersionNotSupportedResponse
+} = decorators;
 
 /**
  * @publicApi
  */
-export const ApiCreatedResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.CREATED
-  });
-
-/**
- * @publicApi
- */
-export const ApiAcceptedResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.ACCEPTED
-  });
-
-/**
- * @publicApi
- */
-export const ApiNoContentResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.NO_CONTENT
-  });
-
-/**
- * @publicApi
- */
-export const ApiMovedPermanentlyResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.MOVED_PERMANENTLY
-  });
-
-/**
- * @publicApi
- */
-export const ApiFoundResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.FOUND
-  });
-
-/**
- * @publicApi
- */
-export const ApiBadRequestResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.BAD_REQUEST
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiUnauthorizedResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.UNAUTHORIZED
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiTooManyRequestsResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.TOO_MANY_REQUESTS
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiNotFoundResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.NOT_FOUND
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiInternalServerErrorResponse = (
-  options: ApiResponseOptions = {}
-) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.INTERNAL_SERVER_ERROR
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiBadGatewayResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.BAD_GATEWAY
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiConflictResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.CONFLICT
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiForbiddenResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.FORBIDDEN
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiGatewayTimeoutResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.GATEWAY_TIMEOUT
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiGoneResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.GONE
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiMethodNotAllowedResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.METHOD_NOT_ALLOWED
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiNotAcceptableResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.NOT_ACCEPTABLE
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiNotImplementedResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.NOT_IMPLEMENTED
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiPreconditionFailedResponse = (
-  options: ApiResponseOptions = {}
-) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.PRECONDITION_FAILED
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiPayloadTooLargeResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.PAYLOAD_TOO_LARGE
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiRequestTimeoutResponse = (options: ApiResponseOptions = {}) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.REQUEST_TIMEOUT
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiServiceUnavailableResponse = (
-  options: ApiResponseOptions = {}
-) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.SERVICE_UNAVAILABLE
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiUnprocessableEntityResponse = (
-  options: ApiResponseOptions = {}
-) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.UNPROCESSABLE_ENTITY
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiUnsupportedMediaTypeResponse = (
-  options: ApiResponseOptions = {}
-) =>
-  ApiResponse({
-    ...options,
-    status: HttpStatus.UNSUPPORTED_MEDIA_TYPE
-  });
-
-
-/**
- * @publicApi
- */
-export const ApiDefaultResponse = (options: ApiResponseOptions = {}) =>
+export const ApiDefaultResponse = (options: ApiResponseNoStatusOptions = {}) =>
   ApiResponse({
     ...options,
     status: 'default'

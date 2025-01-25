@@ -1,21 +1,30 @@
 import { Type } from '@nestjs/common';
 import { isNil, omit } from 'lodash';
+import { EnumSchemaAttributes } from '../interfaces/enum-schema-attributes.interface';
 import {
   ParameterObject,
   SchemaObject
 } from '../interfaces/open-api-spec.interface';
 import { SwaggerEnumType } from '../types/swagger-enum.type';
-import { getEnumType, getEnumValues } from '../utils/enum.utils';
+import { addEnumSchema, isEnumDefined } from '../utils/enum.utils';
 import { createParamDecorator } from './helpers';
 
 type ParameterOptions = Omit<ParameterObject, 'in' | 'schema'>;
 
-interface ApiParamMetadata extends ParameterOptions {
+interface ApiParamCommonMetadata extends ParameterOptions {
   type?: Type<unknown> | Function | [Function] | string;
   format?: string;
   enum?: SwaggerEnumType;
   enumName?: string;
+  enumSchema?: EnumSchemaAttributes;
 }
+
+type ApiParamMetadata =
+  | ApiParamCommonMetadata
+  | (ApiParamCommonMetadata & {
+      enumName: string;
+      enumSchema?: EnumSchemaAttributes;
+    });
 
 interface ApiParamSchemaHost extends ParameterOptions {
   schema: SchemaObject;
@@ -31,25 +40,17 @@ const defaultParamOptions: ApiParamOptions = {
 /**
  * @publicApi
  */
-export function ApiParam(options: ApiParamOptions): MethodDecorator {
-  const param: Record<string, any> = {
+export function ApiParam(
+  options: ApiParamOptions
+): MethodDecorator & ClassDecorator {
+  const param: ApiParamMetadata & Record<string, any> = {
     name: isNil(options.name) ? defaultParamOptions.name : options.name,
     in: 'path',
     ...omit(options, 'enum')
   };
 
-  const apiParamMetadata = options as ApiParamMetadata;
-  if (apiParamMetadata.enum) {
-    param.schema = param.schema || ({} as SchemaObject);
-
-    const paramSchema = param.schema as SchemaObject;
-    const enumValues = getEnumValues(apiParamMetadata.enum);
-    paramSchema.type = getEnumType(enumValues);
-    paramSchema.enum = enumValues;
-
-    if (apiParamMetadata.enumName) {
-      param.enumName = apiParamMetadata.enumName;
-    }
+  if (isEnumDefined(options)) {
+    addEnumSchema(param, options);
   }
 
   return createParamDecorator(param, defaultParamOptions);

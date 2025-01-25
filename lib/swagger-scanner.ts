@@ -4,7 +4,11 @@ import { ApplicationConfig, NestContainer } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { Module } from '@nestjs/core/injector/module';
 import { flatten, isEmpty } from 'lodash';
-import { OpenAPIObject, SwaggerDocumentOptions } from './interfaces';
+import {
+  OpenAPIObject,
+  OperationIdFactory,
+  SwaggerDocumentOptions
+} from './interfaces';
 import { ModuleRoute } from './interfaces/module-route.interface';
 import {
   ReferenceObject,
@@ -35,7 +39,9 @@ export class SwaggerScanner {
       include: includedModules = [],
       extraModels = [],
       ignoreGlobalPrefix = false,
-      operationIdFactory
+      operationIdFactory,
+      linkNameFactory,
+      autoTagControllers = true
     } = options;
 
     const container = (app as any).container as NestContainer;
@@ -71,22 +77,25 @@ export class SwaggerScanner {
                   modulePath,
                   globalPrefix,
                   internalConfigRef,
-                  operationIdFactory
+                  operationIdFactory,
+                  linkNameFactory,
+                  autoTagControllers
                 )
               );
             });
         }
         const modulePath = this.getModulePathMetadata(container, metatype);
-        result = result.concat(
+        return result.concat(
           this.scanModuleControllers(
             controllers,
             modulePath,
             globalPrefix,
             internalConfigRef,
-            operationIdFactory
+            operationIdFactory,
+            linkNameFactory,
+            autoTagControllers
           )
         );
-        return this.transformer.unescapeColonsInPath(app, result);
       }
     );
 
@@ -106,7 +115,13 @@ export class SwaggerScanner {
     modulePath: string | undefined,
     globalPrefix: string | undefined,
     applicationConfig: ApplicationConfig,
-    operationIdFactory?: (controllerKey: string, methodKey: string) => string
+    operationIdFactory?: OperationIdFactory,
+    linkNameFactory?: (
+      controllerKey: string,
+      methodKey: string,
+      fieldKey: string
+    ) => string,
+    autoTagControllers?: boolean
   ): ModuleRoute[] {
     const denormalizedArray = [...controller.values()].map((ctrl) =>
       this.explorer.exploreController(
@@ -114,7 +129,9 @@ export class SwaggerScanner {
         applicationConfig,
         modulePath,
         globalPrefix,
-        operationIdFactory
+        operationIdFactory,
+        linkNameFactory,
+        autoTagControllers
       )
     );
     return flatten(denormalizedArray) as any;

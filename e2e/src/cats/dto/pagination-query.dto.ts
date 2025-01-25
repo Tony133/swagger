@@ -14,18 +14,36 @@ export class PaginationQuery {
     exclusiveMaximum: true,
     exclusiveMinimum: true,
     format: 'int32',
-    default: 0
+    default: 0,
+    example: 123
   })
   page: number;
 
   @ApiProperty({
     name: '_sortBy',
-    nullable: true
+    nullable: true,
+    example: ['sort1', 'sort2']
   })
   sortBy: string[];
 
   @ApiProperty()
   limit: number;
+
+  @ApiProperty({
+    oneOf: [
+      {
+        minimum: 0,
+        maximum: 10,
+        format: 'int32'
+      },
+      {
+        minimum: 100,
+        maximum: 100,
+        format: 'int32'
+      }
+    ],
+  })
+  constrainedLimit?: number;
 
   @ApiProperty({
     enum: LettersEnum,
@@ -43,7 +61,7 @@ export class PaginationQuery {
   @ApiProperty({
     enum: LettersEnum,
     enumName: 'Letter',
-    isArray: true,
+    isArray: true
   })
   letters: LettersEnum[];
 
@@ -52,6 +70,14 @@ export class PaginationQuery {
 
   @ApiProperty({
     type: 'object',
+    properties: {
+      name: {
+        type: 'string'
+      },
+      age: {
+        type: 'number'
+      }
+    },
     additionalProperties: true
   })
   filter: Record<string, any>;

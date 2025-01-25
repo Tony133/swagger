@@ -1,123 +1,9 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1": {
-      "get": {
-        "operationId": "AppController_getHello",
-        "parameters": [
-          {
-            "name": "x-tenant-id",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/v2": {
-      "get": {
-        "operationId": "AppController_getHello",
-        "parameters": [
-          {
-            "name": "x-tenant-id",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/v1/alias1": {
-      "get": {
-        "operationId": "AppController_withAliases",
-        "parameters": [
-          {
-            "name": "x-tenant-id",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/v1/alias2": {
-      "get": {
-        "operationId": "AppController_withAliases",
-        "parameters": [
-          {
-            "name": "x-tenant-id",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/v2/alias1": {
-      "get": {
-        "operationId": "AppController_withAliases",
-        "parameters": [
-          {
-            "name": "x-tenant-id",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/v2/alias2": {
-      "get": {
-        "operationId": "AppController_withAliases",
-        "parameters": [
-          {
-            "name": "x-tenant-id",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/v1/express:colon:another/{prop}": {
       "get": {
-        "operationId": "AppController_withColonExpress",
+        "operationId": "ExpressController_withColons_v1",
         "parameters": [
           {
             "name": "x-tenant-id",
@@ -131,12 +17,15 @@
           "200": {
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "Express"
+        ]
       }
     },
     "/api/v2/express:colon:another/{prop}": {
       "get": {
-        "operationId": "AppController_withColonExpress",
+        "operationId": "ExpressController_withColons_v2",
         "parameters": [
           {
             "name": "x-tenant-id",
@@ -150,12 +39,15 @@
           "200": {
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "Express"
+        ]
       }
     },
-    "/api/v1/fastify:{colon}:{another}/{prop}": {
+    "/api/v1": {
       "get": {
-        "operationId": "AppController_withColonFastify",
+        "operationId": "AppController_getHello_v1",
         "parameters": [
           {
             "name": "x-tenant-id",
@@ -169,12 +61,15 @@
           "200": {
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "App"
+        ]
       }
     },
-    "/api/v2/fastify:{colon}:{another}/{prop}": {
+    "/api/v2": {
       "get": {
-        "operationId": "AppController_withColonFastify",
+        "operationId": "AppController_getHello_v2",
         "parameters": [
           {
             "name": "x-tenant-id",
@@ -188,16 +83,147 @@
           "200": {
             "description": ""
           }
-        }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/v1/alias1": {
+      "get": {
+        "operationId": "AppController_withAliases[0]_v1",
+        "parameters": [
+          {
+            "name": "x-tenant-id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/v1/alias2": {
+      "get": {
+        "operationId": "AppController_withAliases[1]_v1",
+        "parameters": [
+          {
+            "name": "x-tenant-id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/v2/alias1": {
+      "get": {
+        "operationId": "AppController_withAliases[2]_v2",
+        "parameters": [
+          {
+            "name": "x-tenant-id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/api/v2/alias2": {
+      "get": {
+        "operationId": "AppController_withAliases[3]_v2",
+        "parameters": [
+          {
+            "name": "x-tenant-id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
       }
     },
     "/api/cats": {
       "post": {
-        "operationId": "CatsController_create",
-        "x-foo": {
-          "test": "bar "
+        "callbacks": {
+          "myEvent": {
+            "{$request.body#/callbackUrl}": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Cat"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Your server returns this code if it accepts the callback"
+                  }
+                }
+              }
+            }
+          },
+          "mySecondEvent": {
+            "{$request.body#/callbackUrl}": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Cat"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Your server returns this code if it accepts the callback"
+                  }
+                }
+              }
+            }
+          }
         },
-        "summary": "Create cat",
+        "operationId": "CatsController_create",
         "parameters": [
           {
             "name": "header",
@@ -205,8 +231,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -242,10 +268,6 @@
             "description": "Forbidden."
           }
         },
-        "tags": [
-          "cats",
-          "create cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -257,19 +279,18 @@
           {
             "basic": []
           }
-        ]
+        ],
+        "summary": "Create cat",
+        "tags": [
+          "cats",
+          "create cats"
+        ],
+        "x-foo": {
+          "test": "bar "
+        }
       },
       "get": {
         "operationId": "CatsController_findAll",
-        "x-multiple": {
-          "test": "test"
-        },
-        "x-codeSamples": [
-          {
-            "lang": "JavaScript",
-            "source": "console.log('Hello World');"
-          }
-        ],
         "parameters": [
           {
             "name": "header",
@@ -277,8 +298,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -293,6 +314,7 @@
               "title": "Page",
               "format": "int32",
               "default": 0,
+              "example": 123,
               "type": "number"
             }
           },
@@ -302,6 +324,10 @@
             "in": "query",
             "schema": {
               "nullable": true,
+              "example": [
+                "sort1",
+                "sort2"
+              ],
               "type": "array",
               "items": {
                 "type": "string"
@@ -313,6 +339,26 @@
             "required": true,
             "in": "query",
             "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "constrainedLimit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "oneOf": [
+                {
+                  "minimum": 0,
+                  "maximum": 10,
+                  "format": "int32"
+                },
+                {
+                  "minimum": 100,
+                  "maximum": 100,
+                  "format": "int32"
+                }
+              ],
               "type": "number"
             }
           },
@@ -360,8 +406,32 @@
             "required": true,
             "in": "query",
             "schema": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "age": {
+                  "type": "number"
+                }
+              },
               "additionalProperties": true,
               "type": "object"
+            }
+          },
+          {
+            "name": "catBreeds",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "persian",
+                  "siamese",
+                  "maine-coon"
+                ]
+              }
             }
           },
           {
@@ -377,11 +447,6 @@
             "description": ""
           }
         },
-        "tags": [
-          "cats",
-          "tag2",
-          "tag1"
-        ],
         "security": [
           {
             "key2": [],
@@ -393,13 +458,26 @@
           {
             "basic": []
           }
-        ]
+        ],
+        "tags": [
+          "cats",
+          "tag2",
+          "tag1"
+        ],
+        "x-codeSamples": [
+          {
+            "lang": "JavaScript",
+            "source": "console.log('Hello World');"
+          }
+        ],
+        "x-multiple": {
+          "test": "test"
+        }
       }
     },
-    "/api/cats/{id}": {
-      "get": {
-        "operationId": "CatsController_findOne",
-        "x-auth-type": "NONE",
+    "/api/cats/explicit-body": {
+      "post": {
+        "operationId": "CatsController_createExplicitBody",
         "parameters": [
           {
             "name": "header",
@@ -407,8 +485,72 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "x-tenant-id",
+            "in": "header",
+            "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCatDto"
+              },
+              "examples": {
+                "mau": {
+                  "summary": "Mau example",
+                  "value": {
+                    "name": "Mau cat",
+                    "age": 5,
+                    "breed": "Mau"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "key2": [],
+            "key1": []
+          },
+          {
+            "bearer": []
+          },
+          {
+            "basic": []
+          }
+        ],
+        "tags": [
+          "cats"
+        ]
+      }
+    },
+    "/api/cats/{id}": {
+      "get": {
+        "operationId": "CatsController_findOne",
+        "parameters": [
+          {
+            "name": "header",
+            "in": "header",
+            "description": "Test",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -430,6 +572,14 @@
         "responses": {
           "200": {
             "description": "The found record",
+            "links": {
+              "CatsController_findOne_from_kittenIds": {
+                "operationId": "CatsController_findOne",
+                "parameters": {
+                  "id": "$response.body#/kittenIds"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -439,9 +589,6 @@
             }
           }
         },
-        "tags": [
-          "cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -453,7 +600,11 @@
           {
             "basic": []
           }
-        ]
+        ],
+        "tags": [
+          "cats"
+        ],
+        "x-auth-type": "NONE"
       }
     },
     "/api/cats/explicit-query": {
@@ -466,8 +617,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -482,6 +633,7 @@
               "title": "Page",
               "format": "int32",
               "default": 0,
+              "example": 123,
               "type": "number"
             }
           },
@@ -491,6 +643,10 @@
             "required": true,
             "schema": {
               "nullable": true,
+              "example": [
+                "sort1",
+                "sort2"
+              ],
               "type": "array",
               "items": {
                 "type": "string"
@@ -506,11 +662,34 @@
             }
           },
           {
+            "name": "constrainedLimit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "oneOf": [
+                {
+                  "minimum": 0,
+                  "maximum": 10,
+                  "format": "int32"
+                },
+                {
+                  "minimum": 100,
+                  "maximum": 100,
+                  "format": "int32"
+                }
+              ]
+            }
+          },
+          {
             "name": "enum",
             "in": "query",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/LettersEnum"
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/LettersEnum"
+                }
+              ]
             }
           },
           {
@@ -549,6 +728,14 @@
             "in": "query",
             "required": true,
             "schema": {
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "age": {
+                  "type": "number"
+                }
+              },
               "additionalProperties": true,
               "type": "object"
             }
@@ -566,9 +753,6 @@
             "description": ""
           }
         },
-        "tags": [
-          "cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -580,13 +764,15 @@
           {
             "basic": []
           }
+        ],
+        "tags": [
+          "cats"
         ]
       }
     },
     "/api/cats/bulk": {
       "get": {
         "operationId": "CatsController_findAllBulk",
-        "summary": "Find all cats in bulk",
         "parameters": [
           {
             "name": "header",
@@ -594,8 +780,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -609,6 +795,14 @@
         "responses": {
           "200": {
             "description": "",
+            "links": {
+              "CatsController_findOne_from_kittenIds": {
+                "operationId": "CatsController_findOne",
+                "parameters": {
+                  "id": "$response.body#/kittenIds"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -621,9 +815,6 @@
             }
           }
         },
-        "tags": [
-          "cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -635,6 +826,10 @@
           {
             "basic": []
           }
+        ],
+        "summary": "Find all cats in bulk",
+        "tags": [
+          "cats"
         ]
       },
       "post": {
@@ -646,8 +841,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -676,9 +871,6 @@
             "description": ""
           }
         },
-        "tags": [
-          "cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -690,13 +882,15 @@
           {
             "basic": []
           }
+        ],
+        "tags": [
+          "cats"
         ]
       }
     },
     "/api/cats/as-form-data": {
       "post": {
         "operationId": "CatsController_createAsFormData",
-        "summary": "Create cat",
         "parameters": [
           {
             "name": "header",
@@ -704,8 +898,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -729,6 +923,14 @@
         "responses": {
           "201": {
             "description": "The record has been successfully created.",
+            "links": {
+              "CatsController_findOne_from_kittenIds": {
+                "operationId": "CatsController_findOne",
+                "parameters": {
+                  "id": "$response.body#/kittenIds"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -741,9 +943,6 @@
             "description": "Forbidden."
           }
         },
-        "tags": [
-          "cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -755,12 +954,16 @@
           {
             "basic": []
           }
+        ],
+        "summary": "Create cat",
+        "tags": [
+          "cats"
         ]
       }
     },
-    "/api/cats/site*": {
+    "/api/cats/wildcard/{path}": {
       "get": {
-        "operationId": "CatsController_getSite",
+        "operationId": "CatsController_getWildcard",
         "parameters": [
           {
             "name": "header",
@@ -768,8 +971,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -785,9 +988,6 @@
             "description": ""
           }
         },
-        "tags": [
-          "cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -799,6 +999,9 @@
           {
             "basic": []
           }
+        ],
+        "tags": [
+          "cats"
         ]
       }
     },
@@ -812,8 +1015,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -821,12 +1024,12 @@
             "required": true,
             "in": "path",
             "schema": {
-              "type": "string",
               "enum": [
                 "A",
                 "B",
                 "C"
-              ]
+              ],
+              "type": "string"
             }
           },
           {
@@ -842,9 +1045,6 @@
             "description": ""
           }
         },
-        "tags": [
-          "cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -856,6 +1056,63 @@
           {
             "basic": []
           }
+        ],
+        "tags": [
+          "cats"
+        ]
+      }
+    },
+    "/api/cats/with-enum-named/{type}": {
+      "get": {
+        "operationId": "CatsController_getWithEnumNamedParam",
+        "parameters": [
+          {
+            "name": "header",
+            "in": "header",
+            "description": "Test",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "path",
+            "description": "This is a description for 'type' query parameter",
+            "deprecated": false,
+            "schema": {
+              "$ref": "#/components/schemas/Letter"
+            }
+          },
+          {
+            "name": "x-tenant-id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "key2": [],
+            "key1": []
+          },
+          {
+            "bearer": []
+          },
+          {
+            "basic": []
+          }
+        ],
+        "tags": [
+          "cats"
         ]
       }
     },
@@ -869,8 +1126,8 @@
             "description": "Test",
             "required": false,
             "schema": {
-              "default": "test",
-              "type": "string"
+              "type": "string",
+              "default": "test"
             }
           },
           {
@@ -881,6 +1138,18 @@
               "minLength": 10,
               "maxLength": 100,
               "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
             }
           },
           {
@@ -896,9 +1165,6 @@
             "description": ""
           }
         },
-        "tags": [
-          "cats"
-        ],
         "security": [
           {
             "key2": [],
@@ -910,6 +1176,144 @@
           {
             "basic": []
           }
+        ],
+        "tags": [
+          "cats"
+        ]
+      }
+    },
+    "/api/cats/download": {
+      "get": {
+        "operationId": "CatsController_download",
+        "parameters": [
+          {
+            "name": "header",
+            "in": "header",
+            "description": "Test",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "x-tenant-id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "binary file for download",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key2": [],
+            "key1": []
+          },
+          {
+            "bearer": []
+          },
+          {
+            "basic": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "cats"
+        ]
+      }
+    },
+    "/api/cats/raw-schema-response": {
+      "get": {
+        "operationId": "CatsController_rawSchemaResponse",
+        "parameters": [
+          {
+            "name": "header",
+            "in": "header",
+            "description": "Test",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "x-tenant-id",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The paginated response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Cat"
+                      }
+                    },
+                    "pageInfo": {
+                      "type": "object",
+                      "properties": {
+                        "hasPreviousPage": {
+                          "type": "boolean"
+                        },
+                        "hasNextPage": {
+                          "type": "boolean"
+                        },
+                        "startCursor": {
+                          "type": "string"
+                        },
+                        "endCursor": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "key2": [],
+            "key1": []
+          },
+          {
+            "bearer": []
+          },
+          {
+            "basic": []
+          }
+        ],
+        "tags": [
+          "cats"
         ]
       }
     }
@@ -974,6 +1378,7 @@
             "type": "number"
           }
         },
+        "description": "ExtraModel description",
         "required": [
           "one",
           "two"
@@ -985,7 +1390,9 @@
           "A",
           "B",
           "C"
-        ]
+        ],
+        "description": "This is a description for the LettersEnum schema",
+        "deprecated": true
       },
       "TagDto": {
         "type": "object",
@@ -1042,14 +1449,38 @@
               }
             }
           },
+          "enumWithDescription": {
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ],
+            "type": "string",
+            "description": "Enum with description"
+          },
           "enum": {
-            "$ref": "#/components/schemas/LettersEnum"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LettersEnum"
+              }
+            ]
           },
           "enumArr": {
             "type": "array",
+            "description": "This is a description for the enumArr attribute",
             "items": {
               "$ref": "#/components/schemas/LettersEnum"
             }
+          },
+          "enumWithRef": {
+            "description": "A small assortment of letters (in DTO)?",
+            "default": "A",
+            "deprecated": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LettersEnum"
+              }
+            ]
           },
           "tag": {
             "description": "tag",
@@ -1060,6 +1491,10 @@
             ]
           }
         },
+        "x-tags": [
+          "foo",
+          "bar"
+        ],
         "required": [
           "name",
           "age",
@@ -1068,8 +1503,10 @@
           "createdAt",
           "urls",
           "options",
+          "enumWithDescription",
           "enum",
-          "enumArr"
+          "enumArr",
+          "enumWithRef"
         ]
       },
       "Cat": {
@@ -1123,6 +1560,23 @@
               }
             }
           },
+          "rawDefinition": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "ErrorName"
+              },
+              "status": {
+                "type": "number",
+                "example": 400
+              }
+            },
+            "required": [
+              "name",
+              "status"
+            ]
+          },
           "enum": {
             "type": "string",
             "enum": [
@@ -1141,18 +1595,77 @@
                 "C"
               ]
             }
+          },
+          "enumWithRef": {
+            "description": "A small assortment of letters?",
+            "default": "A",
+            "deprecated": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LettersEnum"
+              }
+            ]
+          },
+          "oneOfExample": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "boolean"
+                }
+              }
+            ],
+            "description": "Array of values that uses \"oneOf\""
+          },
+          "kittenIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "siblings": {
+            "type": "object",
+            "properties": {
+              "ids": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "ids"
+            ]
           }
+        },
+        "x-schema-extension-multiple": {
+          "test": "test"
+        },
+        "x-schema-extension": {
+          "test": "test"
         },
         "required": [
           "name",
           "age",
           "breed",
-          "_tags",
           "createdAt",
           "urls",
           "_options",
+          "rawDefinition",
           "enum",
-          "enumArr"
+          "enumArr",
+          "enumWithRef",
+          "oneOfExample",
+          "kittenIds"
         ]
       },
       "Letter": {
@@ -1161,7 +1674,9 @@
           "A",
           "B",
           "C"
-        ]
+        ],
+        "description": "This is a description for the Letters schema",
+        "deprecated": true
       }
     }
   },

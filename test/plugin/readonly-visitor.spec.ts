@@ -19,7 +19,9 @@ describe('Readonly visitor', () => {
   const visitor = new ReadonlyVisitor({
     pathToSource: join(__dirname, 'fixtures', 'project'),
     introspectComments: true,
-    dtoFileNameSuffix: ['.dto.ts', '.model.ts', '.class.ts']
+    dtoFileNameSuffix: ['.dto.ts', '.model.ts', '.class.ts'],
+    classValidatorShim: true,
+    debug: true
   });
   const metadataPrinter = new PluginMetadataPrinter();
 
@@ -48,7 +50,16 @@ describe('Readonly visitor', () => {
     const expectedOutput = readFileSync(
       join(__dirname, 'fixtures', 'serialized-meta.fixture.ts'),
       'utf-8'
-    );
+    )
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n');
+    /** Normalize the file line endings to LF */
+
+    // writeFileSync(
+    //   join(__dirname, 'fixtures', 'serialized-meta.fixture.ts'),
+    //   result,
+    //   'utf-8'
+    // );
 
     expect(result).toEqual(expectedOutput);
   });

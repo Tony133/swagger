@@ -13,15 +13,23 @@ import {
 import { ApplicationModule } from './src/app.module';
 import { Cat } from './src/cats/classes/cat.class';
 import { TagDto } from './src/cats/dto/tag.dto';
+import { ExpressController } from './src/express.controller';
 
 describe('Validate OpenAPI schema', () => {
   let app: INestApplication;
   let options: Omit<OpenAPIObject, 'paths'>;
 
   beforeEach(async () => {
-    app = await NestFactory.create(ApplicationModule, {
-      logger: false
-    });
+    app = await NestFactory.create(
+      {
+        module: class {},
+        imports: [ApplicationModule],
+        controllers: [ExpressController]
+      },
+      {
+        logger: false
+      }
+    );
     app.setGlobalPrefix('api/');
     app.enableVersioning();
 
@@ -58,7 +66,14 @@ describe('Validate OpenAPI schema', () => {
               Cat: {
                 tags: {
                   description: 'Tags of the cat',
-                  example: ['tag1', 'tag2']
+                  example: ['tag1', 'tag2'],
+                  required: false
+                },
+                siblings: {
+                  required: false,
+                  type: () => ({
+                    ids: { required: true, type: () => Number }
+                  })
                 }
               }
             }
@@ -67,6 +82,11 @@ describe('Validate OpenAPI schema', () => {
             import('./src/cats/dto/create-cat.dto'),
             {
               CreateCatDto: {
+                enumWithDescription: {
+                  enum: await import(
+                    './src/cats/dto/pagination-query.dto'
+                  ).then((f) => f.LettersEnum)
+                },
                 name: {
                   description: 'Name of the cat'
                 }
@@ -99,13 +119,35 @@ describe('Validate OpenAPI schema', () => {
     writeFileSync(join(__dirname, 'api-spec.json'), doc);
 
     try {
-      let api = await SwaggerParser.validate(document as any);
+      const api = (await SwaggerParser.validate(
+        document as any
+      )) as OpenAPIV3.Document;
       console.log(
         'API name: %s, Version: %s',
         api.info.title,
         api.info.version
       );
       expect(api.info.title).toEqual('Cats example');
+      expect(
+        api.components.schemas['Cat']['x-schema-extension']['test']
+      ).toEqual('test');
+      expect(
+        api.components.schemas['Cat']['x-schema-extension-multiple']['test']
+      ).toEqual('test');
+      expect(
+        api.paths['/api/cats']['post']['callbacks']['myEvent'][
+          '{$request.body#/callbackUrl}'
+        ]['post']['requestBody']['content']['application/json']['schema'][
+          'properties'
+        ]['breed']['type']
+      ).toEqual('string');
+      expect(
+        api.paths['/api/cats']['post']['callbacks']['mySecondEvent'][
+          '{$request.body#/callbackUrl}'
+        ]['post']['requestBody']['content']['application/json']['schema'][
+          'properties'
+        ]['breed']['type']
+      ).toEqual('string');
       expect(api.paths['/api/cats']['get']['x-codeSamples'][0]['lang']).toEqual(
         'JavaScript'
       );
@@ -164,5 +206,20 @@ describe('Validate OpenAPI schema', () => {
     console.log('API name: %s, Version: %s', api.info.title, api.info.version);
     expect(api.components.schemas).toHaveProperty('Person');
     expect(api.components.schemas).toHaveProperty('Cat');
+  });
+
+  it('should consider explicit config over auto-detected schema', async () => {
+    const document = SwaggerModule.createDocument(app, options);
+    expect(document.paths['/api/cats/download'].get.responses).toEqual({
+      '200': {
+        description: 'binary file for download',
+        content: {
+          'application/pdf': {
+            schema: { type: 'string', format: 'binary' }
+          },
+          'image/jpeg': { schema: { type: 'string', format: 'binary' } }
+        }
+      }
+    });
   });
 });

@@ -3,30 +3,34 @@ import { SchemaObject } from '../interfaces/open-api-spec.interface';
 import { SchemaObjectMetadata } from '../interfaces/schema-object-metadata.interface';
 import { SwaggerEnumType } from '../types/swagger-enum.type';
 
-export function getEnumValues(enumType: SwaggerEnumType): string[] | number[] {
+export function getEnumValues(
+  enumType: SwaggerEnumType | (() => SwaggerEnumType)
+): string[] | number[] {
+  if (typeof enumType === 'function') {
+    return getEnumValues(enumType());
+  }
+
   if (Array.isArray(enumType)) {
     return enumType as string[];
   }
   if (typeof enumType !== 'object') {
     return [];
   }
-  /*
-    Enums with numeric values
-      enum Size {
-        SMALL = 1,
-        BIG = 2
-      }
-    are transpiled to include a reverse mapping
-      const Size = {
-        "1": "SMALL",
-        "2": "BIG",
-        "SMALL": 1,
-        "BIG": 2,
-      }
-   */
+  // Enums with numeric values
+  //   enum Size {
+  //     SMALL = 1,
+  //     BIG = 2
+  //   }
+  // are transpiled to include a reverse mapping
+  //   const Size = {
+  //     "1": "SMALL",
+  //     "2": "BIG",
+  //     "SMALL": 1,
+  //     "BIG": 2,
+  //   }
   const numericValues = Object.values(enumType)
     .filter((value) => typeof value === 'number')
-    .map((value) => value.toString());
+    .map((value: any) => value.toString());
 
   return Object.keys(enumType)
     .filter((key) => !numericValues.includes(key))
@@ -39,8 +43,10 @@ export function getEnumType(values: (string | number)[]): 'string' | 'number' {
 }
 
 export function addEnumArraySchema(
-  paramDefinition: Partial<Record<'schema' | 'isArray' | 'enumName', any>>,
-  decoratorOptions: Partial<Record<'enum' | 'enumName', any>>
+  paramDefinition: Partial<
+    Record<'schema' | 'isArray' | 'enumName' | 'enumSchema', any>
+  >,
+  decoratorOptions: Partial<Record<'enum' | 'enumName' | 'enumSchema', any>>
 ) {
   const paramSchema: SchemaObject = paramDefinition.schema || {};
   paramDefinition.schema = paramSchema;
@@ -55,6 +61,10 @@ export function addEnumArraySchema(
 
   if (decoratorOptions.enumName) {
     paramDefinition.enumName = decoratorOptions.enumName;
+  }
+
+  if (decoratorOptions.enumSchema) {
+    paramDefinition.enumSchema = decoratorOptions.enumSchema;
   }
 }
 
@@ -71,6 +81,10 @@ export function addEnumSchema(
 
   if (decoratorOptions.enumName) {
     paramDefinition.enumName = decoratorOptions.enumName;
+  }
+
+  if (decoratorOptions.enumSchema) {
+    paramDefinition.enumSchema = decoratorOptions.enumSchema;
   }
 }
 

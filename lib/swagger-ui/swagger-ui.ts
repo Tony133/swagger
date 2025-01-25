@@ -1,5 +1,5 @@
-import { favIconHtml, htmlTemplateString, jsTemplateString } from './constants';
 import { OpenAPIObject, SwaggerCustomOptions } from '../interfaces';
+import { favIconHtml, htmlTemplateString, jsTemplateString } from './constants';
 import { buildJSInitOptions } from './helpers';
 
 /**
@@ -27,7 +27,6 @@ let swaggerAssetsAbsoluteFSPath: string | undefined;
  */
 export function getSwaggerAssetsAbsoluteFSPath() {
   if (!swaggerAssetsAbsoluteFSPath) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     swaggerAssetsAbsoluteFSPath = require('swagger-ui-dist/absolute-path.js')();
   }
 
@@ -66,7 +65,6 @@ function toTags(
  */
 export function buildSwaggerHTML(
   baseUrl: string,
-  swaggerDoc: OpenAPIObject,
   customOptions: SwaggerCustomOptions = {}
 ) {
   const {

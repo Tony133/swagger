@@ -5,7 +5,11 @@ import {
 } from '@nestjs/common/constants';
 import { RouteParamtypes } from '@nestjs/common/enums/route-paramtypes.enum';
 import { isEmpty, mapValues, omitBy } from 'lodash';
-import { ParameterLocation, SchemaObject } from '../interfaces/open-api-spec.interface';
+import { EnumSchemaAttributes } from '../interfaces/enum-schema-attributes.interface';
+import {
+  ParameterLocation,
+  SchemaObject
+} from '../interfaces/open-api-spec.interface';
 import { reverseObjectKeys } from '../utils/reverse-object-keys.util';
 
 interface ParamMetadata {
@@ -20,9 +24,10 @@ export interface ParamWithTypeMetadata {
   in?: ParameterLocation | 'body' | typeof PARAM_TOKEN_PLACEHOLDER;
   isArray?: boolean;
   items?: SchemaObject;
-  required: true;
+  required?: boolean;
   enum?: unknown[];
   enumName?: string;
+  enumSchema?: EnumSchemaAttributes;
 }
 export type ParamsWithType = Record<string, ParamWithTypeMetadata>;
 
@@ -39,6 +44,9 @@ export class ParameterMetadataAccessor {
       instance,
       method.name
     );
+    if (!types?.length) {
+      return undefined;
+    }
     const routeArgsMetadata: ParamsMetadata =
       Reflect.getMetadata(
         ROUTE_ARGS_METADATA,
@@ -48,11 +56,12 @@ export class ParameterMetadataAccessor {
 
     const parametersWithType: ParamsWithType = mapValues(
       reverseObjectKeys(routeArgsMetadata),
-      (param: ParamMetadata) => ({
-        type: types[param.index],
-        name: param.data,
-        required: true
-      })
+      (param: ParamMetadata) =>
+        ({
+          type: types[param.index],
+          name: param.data,
+          required: true
+        }) as unknown as ParamsWithType
     );
     const excludePredicate = (val: ParamWithTypeMetadata) =>
       val.in === PARAM_TOKEN_PLACEHOLDER || (val.name && val.in === 'body');

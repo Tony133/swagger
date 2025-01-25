@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 export function ApiProperty() {
   return () => {};
 }
@@ -59,6 +58,18 @@ export function ApiQuery() {
 export function ApiResponse() {
   return () => {};
 }
+export function ApiContinueResponse() {
+  return () => {};
+}
+export function ApiSwitchingProtocolsResponse() {
+  return () => {};
+}
+export function ApiProcessingResponse() {
+  return () => {};
+}
+export function ApiEarlyhintsResponse() {
+  return () => {};
+}
 export function ApiOkResponse() {
   return () => {};
 }
@@ -68,7 +79,19 @@ export function ApiCreatedResponse() {
 export function ApiAcceptedResponse() {
   return () => {};
 }
+export function ApiNonAuthoritativeInformationResponse() {
+  return () => {};
+}
 export function ApiNoContentResponse() {
+  return () => {};
+}
+export function ApiResetContentResponse() {
+  return () => {};
+}
+export function ApiPartialContentResponse() {
+  return () => {};
+}
+export function ApiAmbiguousResponse() {
   return () => {};
 }
 export function ApiMovedPermanentlyResponse() {
@@ -77,34 +100,31 @@ export function ApiMovedPermanentlyResponse() {
 export function ApiFoundResponse() {
   return () => {};
 }
+export function ApiSeeOtherResponse() {
+  return () => {};
+}
+export function ApiNotModifiedResponse() {
+  return () => {};
+}
+export function ApiTemporaryRedirectResponse() {
+  return () => {};
+}
+export function ApiPermanentRedirectResponse() {
+  return () => {};
+}
 export function ApiBadRequestResponse() {
   return () => {};
 }
 export function ApiUnauthorizedResponse() {
   return () => {};
 }
-export function ApiTooManyRequestsResponse() {
-  return () => {};
-}
-export function ApiNotFoundResponse() {
-  return () => {};
-}
-export function ApiInternalServerErrorResponse() {
-  return () => {};
-}
-export function ApiBadGatewayResponse() {
-  return () => {};
-}
-export function ApiConflictResponse() {
+export function ApiPaymentRequiredResponse() {
   return () => {};
 }
 export function ApiForbiddenResponse() {
   return () => {};
 }
-export function ApiGatewayTimeoutResponse() {
-  return () => {};
-}
-export function ApiGoneResponse() {
+export function ApiNotFoundResponse() {
   return () => {};
 }
 export function ApiMethodNotAllowedResponse() {
@@ -113,7 +133,19 @@ export function ApiMethodNotAllowedResponse() {
 export function ApiNotAcceptableResponse() {
   return () => {};
 }
-export function ApiNotImplementedResponse() {
+export function ApiProxyAuthenticationRequiredResponse() {
+  return () => {};
+}
+export function ApiRequestTimeoutResponse() {
+  return () => {};
+}
+export function ApiConflictResponse() {
+  return () => {};
+}
+export function ApiGoneResponse() {
+  return () => {};
+}
+export function ApiLengthRequiredResponse() {
   return () => {};
 }
 export function ApiPreconditionFailedResponse() {
@@ -122,25 +154,73 @@ export function ApiPreconditionFailedResponse() {
 export function ApiPayloadTooLargeResponse() {
   return () => {};
 }
-export function ApiRequestTimeoutResponse() {
-  return () => {};
-}
-export function ApiServiceUnavailableResponse() {
-  return () => {};
-}
-export function ApiUnprocessableEntityResponse() {
+export function ApiUriTooLongResponse() {
   return () => {};
 }
 export function ApiUnsupportedMediaTypeResponse() {
   return () => {};
 }
+export function ApiRequestedRangeNotSatisfiableResponse() {
+  return () => {};
+}
+export function ApiExpectationFailedResponse() {
+  return () => {};
+}
+export function ApiIAmATeapotResponse() {
+  return () => {};
+}
+export function ApiMisdirectedResponse() {
+  return () => {};
+}
+export function ApiUnprocessableEntityResponse() {
+  return () => {};
+}
+export function ApiFailedDependencyResponse() {
+  return () => {};
+}
+export function ApiPreconditionRequiredResponse() {
+  return () => {};
+}
+export function ApiTooManyRequestsResponse() {
+  return () => {};
+}
+export function ApiInternalServerErrorResponse() {
+  return () => {};
+}
+export function ApiNotImplementedResponse() {
+  return () => {};
+}
+export function ApiBadGatewayResponse() {
+  return () => {};
+}
+export function ApiServiceUnavailableResponse() {
+  return () => {};
+}
+export function ApiGatewayTimeoutResponse() {
+  return () => {};
+}
+export function ApiHttpVersionNotSupportedResponse() {
+  return () => {};
+}
 export function ApiDefaultResponse() {
+  return () => {};
+}
+export function ApiSchema() {
   return () => {};
 }
 export function ApiSecurity() {
   return () => {};
 }
 export function ApiTags() {
+  return () => {};
+}
+export function ApiCallbacks() {
+  return () => {};
+}
+export function ApiLink() {
+  return () => {};
+}
+export function ApiDefaultGetter() {
   return () => {};
 }
 export function ApiExtension() {
@@ -153,19 +233,22 @@ export function SwaggerModule() {
   return () => {};
 }
 export function IntersectionType() {
-  return () => {};
+  return class {};
 }
 export function OmitType() {
-  return () => {};
+  return class {};
 }
 export function PartialType() {
-  return () => {};
+  return class {};
 }
 export function PickType() {
-  return () => {};
+  return class {};
 }
 export function getSchemaPath() {
   return () => '';
+}
+export function refs() {
+  return [];
 }
 export function before() {
   return () => '';

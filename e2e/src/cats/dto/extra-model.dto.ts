@@ -1,6 +1,10 @@
-import { ApiProperty } from '../../../../lib';
+import { ApiProperty, ApiSchema } from '../../../../lib';
 
-export class ExtraModel {
+@ApiSchema({
+  name: 'ExtraModel',
+  description: 'ExtraModel description'
+})
+export class ExtraModelDto {
   @ApiProperty()
   readonly one: string;
 

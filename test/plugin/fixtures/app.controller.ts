@@ -3,16 +3,27 @@ import { ApiOperation } from '@nestjs/swagger';
 
 class Cat {}
 
+class PromiseCat {}
+
+class ObservableCat {}
+
 @Controller('cats')
 export class AppController {
   onApplicationBootstrap() {}
 
   /**
    * create a Cat
+   * 
+   * @remarks Creating a test cat
+   * 
+   * @throws {500} Something is wrong.
+   * @throws {400} Bad Request.
+   * @throws {400} Missing parameters.
    *
    * @returns {Promise<Cat>}
    * @memberof AppController
    */
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
   @Post()
   async create(): Promise<Cat> {}
 
@@ -36,6 +47,24 @@ export class AppController {
   @ApiOperation({ deprecated: false })
   @Post()
   async testCreate2(): Promise<Cat> {}
+
+  /**
+   * create a test PromiseCat
+   *
+   * @returns {Promise<PromiseCat>>}
+   * @memberof AppController
+   */
+  @Post()
+  async testCreate3(): Promise<PromiseCat> {}
+
+  /**
+   * create a test ObservableCat
+   *
+   * @returns {Promise<ObservableCat>}
+   * @memberof AppController
+   */
+  @Post()
+  async testCreate4(): Promise<ObservableCat> {}
 
   /**
    * find a Cat
@@ -66,10 +95,20 @@ const common_1 = require(\"@nestjs/common\");
 const swagger_1 = require(\"@nestjs/swagger\");
 class Cat {
 }
-let AppController = exports.AppController = class AppController {
+class PromiseCat {
+}
+class ObservableCat {
+}
+let AppController = class AppController {
     onApplicationBootstrap() { }
     /**
      * create a Cat
+     *
+     * @remarks Creating a test cat
+     *
+     * @throws {500} Something is wrong.
+     * @throws {400} Bad Request.
+     * @throws {400} Missing parameters.
      *
      * @returns {Promise<Cat>}
      * @memberof AppController
@@ -92,6 +131,20 @@ let AppController = exports.AppController = class AppController {
      */
     async testCreate2() { }
     /**
+     * create a test PromiseCat
+     *
+     * @returns {Promise<PromiseCat>>}
+     * @memberof AppController
+     */
+    async testCreate3() { }
+    /**
+     * create a test ObservableCat
+     *
+     * @returns {Promise<ObservableCat>}
+     * @memberof AppController
+     */
+    async testCreate4() { }
+    /**
      * find a Cat
      */
     async findOne() { }
@@ -103,8 +156,13 @@ let AppController = exports.AppController = class AppController {
      */
     async findAll() { }
 };
+exports.AppController = AppController;
 __decorate([
-    openapi.ApiOperation({ summary: \"create a Cat\" }),
+    openapi.ApiOperation({ summary: \"create a Cat\", description: \"Creating a test cat\" }),
+    openapi.ApiResponse({ status: 500, description: "Something is wrong." }),
+    openapi.ApiResponse({ status: 400, description: "Bad Request." }),
+    openapi.ApiResponse({ status: 400, description: "Missing parameters." }),
+    ApiResponse({ status: 403, description: 'Forbidden.' }),
     (0, common_1.Post)(),
     openapi.ApiResponse({ status: 201, type: Cat })
 ], AppController.prototype, \"create\", null);
@@ -118,6 +176,16 @@ __decorate([
     (0, common_1.Post)(),
     openapi.ApiResponse({ status: 201, type: Cat })
 ], AppController.prototype, \"testCreate2\", null);
+__decorate([
+    openapi.ApiOperation({ summary: \"create a test PromiseCat\" }),
+    (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: PromiseCat })
+], AppController.prototype, \"testCreate3\", null);
+__decorate([
+    openapi.ApiOperation({ summary: \"create a test ObservableCat\" }),
+    (0, common_1.Post)(),
+    openapi.ApiResponse({ status: 201, type: ObservableCat })
+], AppController.prototype, \"testCreate4\", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: \"find a Cat\" }),
     Get(),
